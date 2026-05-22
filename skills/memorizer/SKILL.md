@@ -3,7 +3,7 @@ name: memorizer
 description: >
   コンテキスト管理スキル。作業コンテキストをトピック別ファイルに保存・ロード・一覧表示する。
   `/memorizer new <topic>` で空トピック作成、`/memorizer save [topic]` で保存、
-  `/memorizer load <topic...>` でロード、`/memorizer list` で一覧。
+  `/memorizer load <topic...>` でロード、`/memorizer list` で一覧、`/memorizer compact` で類似トピック統合。
 ---
 
 # Memorizer: コンテキスト管理
@@ -198,6 +198,7 @@ updated: {date}
 ### Step 3 — ロードと表示
 
 解決済みの全トピックの `{topic}.md` を Read する。`{topic}/context-log.md` はこの時点では読まない（ユーザーが必要と判断したタイミングで読む）。
+ただし、フロントマターに `merged_from` がある場合は、列挙された旧トピックの `{old-topic}/context-log.md` も context-log として扱う（ユーザーが context-log を要求したタイミングで読む）。
 全トピックの内容をまとめて3〜5行で要約して表示する。ロードしたトピック一覧も表示する。
 
 ---
@@ -211,3 +212,32 @@ updated: {date}
 ```
 
 `index.md` が存在しない場合は「インデックスがありません。`/memorizer save` で作成してください。」と表示する。
+
+---
+
+## `/memorizer compact` — 類似トピック統合
+
+### Step 1 — 全トピックのロード
+
+`memory/contexts/index.md` を Read し、全トピックの `{topic}.md` を Read する。
+
+### Step 2 — 類似検出
+
+内容・テーマが重複または類似しているトピック群を特定し、マージグループを決定する。
+
+### Step 3 — 統合実行
+
+各グループについて以下を行う：
+
+1. 旧トピックの `{topic}.md` の内容を統合して新 `{merged-topic}.md` を作成。フロントマターに `merged_from` を記録する：
+   ```yaml
+   merged_from:
+     - {topic-a}
+     - {topic-b}
+   ```
+2. 旧トピックのファイル・ディレクトリは削除せず残す（context-logの参照先として保持）
+3. `index.md` を更新（旧エントリ削除・新エントリ追加）
+
+### Step 4 — 報告
+
+統合したグループ数と新トピック名の一覧を表示する。
